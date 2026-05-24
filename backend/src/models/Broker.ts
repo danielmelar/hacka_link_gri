@@ -1,5 +1,6 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types, Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 import type { PlanoBroker } from '../types';
 
 export interface IBroker extends Document {
@@ -101,6 +102,19 @@ const BrokerSchema = new Schema<IBroker>(
   }
 );
 
+// Pre-save hook to hash password
+BrokerSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 // Compound indexes only (unique fields already have indexes)
 BrokerSchema.index({ isActive: 1, plan: 1 });
 
@@ -136,4 +150,9 @@ BrokerSchema.statics.findByApiToken = function(token: string) {
   return this.findOne({ apiToken: token, isActive: true });
 };
 
-export const Broker = mongoose.model<IBroker>('Broker', BrokerSchema);
+interface IBrokerModel extends Model<IBroker> {
+  findByDeepLinkToken(token: string): any;
+  findByApiToken(token: string): any;
+}
+
+export const Broker = mongoose.model<IBroker, IBrokerModel>('Broker', BrokerSchema);

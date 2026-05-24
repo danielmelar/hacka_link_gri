@@ -13,6 +13,11 @@ import { healthRoutes } from './routes/health';
 import { telegramWebhookRoute } from './routes/webhook';
 import { sseRoutes } from './routes/sse';
 import { dashboardRoutes } from './routes/dashboard';
+import { propertyRoutes } from './routes/properties';
+import { authRoutes } from './routes/auth';
+import { analyticsRoutes } from './routes/analytics';
+import { followUpRoutes } from './routes/followUps';
+import { settingsRoutes } from './routes/settings';
 
 // Create Fastify instance
 const app = Fastify({
@@ -23,7 +28,9 @@ const app = Fastify({
 async function registerPlugins(): Promise<void> {
   // CORS
   await app.register(cors, {
-    origin: NODE_ENV === 'development' ? true : [/\.linkgri\.com$/, 'http://localhost:3000'],
+    origin: NODE_ENV === 'development' 
+      ? ['http://localhost:5173', 'http://localhost:3000', true] 
+      : [/\.linkgri\.com$/, /\.clavis\.com$/, 'http://localhost:3000'],
     credentials: true,
   });
   
@@ -45,11 +52,26 @@ async function registerRoutes(): Promise<void> {
   // Telegram webhook (public, but validated by Telegram token)
   await app.register(telegramWebhookRoute, { prefix: '/webhook' });
   
+  // Auth (public)
+  await app.register(authRoutes, { prefix: '/api' });
+
   // SSE events (authenticated)
   await app.register(sseRoutes, { prefix: '/api/events' });
   
   // Dashboard API (authenticated)
   await app.register(dashboardRoutes, { prefix: '/api' });
+
+  // Properties API (authenticated)
+  await app.register(propertyRoutes, { prefix: '/api' });
+
+  // Analytics API (authenticated)
+  await app.register(analyticsRoutes, { prefix: '/api' });
+
+  // Follow-ups API (authenticated)
+  await app.register(followUpRoutes, { prefix: '/api' });
+
+  // Settings API (authenticated)
+  await app.register(settingsRoutes, { prefix: '/api' });
   
   // 404 handler
   app.setNotFoundHandler((request, reply) => {

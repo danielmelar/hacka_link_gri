@@ -30,14 +30,7 @@ Extraia as seguintes entidades da mensagem do usuário:
 
 Retorne APENAS um objeto JSON válido com as entidades encontradas. Use null para valores não encontrados.
 Exemplo de resposta:
-{
-  "nome": "João Silva",
-  "temFilhos": true,
-  "quantosFilhos": 2,
-  "orcamento": "até 600 mil",
-  "tipoImovel": "apartamento",
-  "urgencia": "media"
-}`],
+{{"nome": "João Silva", "temFilhos": true, "quantosFilhos": 2, "orcamento": "até 600 mil", "tipoImovel": "apartamento", "urgencia": "media"}}`],
   ['human', '{message}'],
 ]);
 

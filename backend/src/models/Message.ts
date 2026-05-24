@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types, Model } from 'mongoose';
 
 export type MessageDirection = 'inbound' | 'outbound';
 export type MessageType = 'text' | 'image' | 'video' | 'document' | 'location' | 'contact';
@@ -224,4 +224,12 @@ MessageSchema.statics.getStatsByBroker = function(brokerId: string, since: Date)
   ]);
 };
 
-export const Message = mongoose.model<IMessage>('Message', MessageSchema);
+interface IMessageModel extends Model<IMessage> {
+  findByLead(leadId: string, options?: any): any;
+  findConversation(leadId: string, limit?: number): any;
+  getRecentForContext(leadId: string, limit?: number): any;
+  getUnreadCount(brokerId: string): any;
+  getStatsByBroker(brokerId: string, since: Date): any;
+}
+
+export const Message = mongoose.model<IMessage, IMessageModel>('Message', MessageSchema);

@@ -1,7 +1,9 @@
 import { Broker } from '../../models/Broker';
 import { logger } from '../../utils/logger';
+import { env } from '../../config/env';
+import jwt from 'jsonwebtoken';
 
-// Simple API token authentication
+// Unified authentication: supports both JWT (frontend) and API token (legacy/telegram)
 export async function authenticateBroker(request: any, reply: any): Promise<void> {
   try {
     const authHeader = request.headers.authorization;
@@ -18,16 +20,29 @@ export async function authenticateBroker(request: any, reply: any): Promise<void
     }
     
     const token = authHeader.replace('Bearer ', '');
+    let broker = null;
     
-    // Find broker by API token
-    const broker = await Broker.findByApiToken(token);
+    // Try JWT first (frontend auth)
+    if (token.includes('.')) {
+      try {
+        const decoded = jwt.verify(token, env.JWT_SECRET) as any;
+        broker = await Broker.findById(decoded.brokerId);
+      } catch {
+        // JWT invalid, will try API token below
+      }
+    }
+    
+    // Fallback to API token (legacy/telegram)
+    if (!broker) {
+      broker = await Broker.findByApiToken(token);
+    }
     
     if (!broker) {
       reply.status(401).send({
         success: false,
         error: {
           code: 'INVALID_TOKEN',
-          message: 'Invalid API token',
+          message: 'Invalid token',
         },
       });
       return;

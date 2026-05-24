@@ -19,8 +19,8 @@ const envSchema = z.object({
   // OpenRouter (unified API for multiple AI providers)
   OPENROUTER_API_KEY: z.string().min(1, 'OpenRouter API key is required'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
-  OPENROUTER_HTTP_REFERER: z.string().default('https://linkgri.com'),
-  OPENROUTER_APP_NAME: z.string().default('LinkGRI'),
+  OPENROUTER_HTTP_REFERER: z.string().default('https://clavis.immo'),
+  OPENROUTER_APP_NAME: z.string().default('CLAVIS'),
   OPENROUTER_MODEL: z.string().default('openai/gpt-4o-mini'),
   OPENROUTER_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
   

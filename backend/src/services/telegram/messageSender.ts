@@ -85,7 +85,7 @@ export async function sendWelcomeMessage(
   chatId: string,
   brokerName: string
 ): Promise<SendMessageResult> {
-  const message = `Olá! 👋 Sou a **Sofia**, sua consultora imobiliária da LinkGRI.
+  const message = `Olá! 👋 Sou a **Sofia**, sua consultora imobiliária da **CLAVIS**.
 
 Estou aqui para ajudar você a encontrar o imóvel ideal. Fui designada pelo corretor **${brokerName}** para entender suas necessidades e apresentar as melhores opções do portfólio dele. 🏠
 
