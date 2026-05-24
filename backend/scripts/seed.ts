@@ -39,7 +39,7 @@ async function seedDatabase(): Promise<void> {
     logger.info(`   Broker: ${broker.name} (${broker.email})`);
     logger.info(`   API Token: ${broker.apiToken}`);
     logger.info(`   Deep Link Token: ${broker.deepLinkToken}`);
-    logger.info(`   Deep Link: https://t.me/LinkGRIBot?start=${broker.deepLinkToken}`);
+    logger.info(`   Deep Link: https://t.me/clavisapp_bot?start=${broker.deepLinkToken}`);
     logger.info('');
     logger.info(`   Properties: ${properties.length}`);
     logger.info(`   Leads: ${leads.length}`);

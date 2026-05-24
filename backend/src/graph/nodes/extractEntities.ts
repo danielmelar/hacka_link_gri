@@ -2,7 +2,13 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { JsonOutputParser } from '@langchain/core/output_parsers';
 import type { AgentGraphState } from '../../types';
-import { OPENAI_API_KEY, OPENAI_MODEL } from '../../config/env';
+import {
+  OPENROUTER_API_KEY,
+  OPENROUTER_BASE_URL,
+  OPENROUTER_HTTP_REFERER,
+  OPENROUTER_APP_NAME,
+  OPENROUTER_MODEL,
+} from '../../config/env';
 import { logger } from '../../utils/logger';
 
 const extractionPrompt = ChatPromptTemplate.fromMessages([
@@ -42,9 +48,16 @@ export async function extractEntities(state: AgentGraphState): Promise<Partial<A
     logger.info(`Extracting entities for lead ${state.leadId}`);
     
     const model = new ChatOpenAI({
-      modelName: OPENAI_MODEL,
+      modelName: OPENROUTER_MODEL,
       temperature: 0,
-      openAIApiKey: OPENAI_API_KEY,
+      apiKey: OPENROUTER_API_KEY,
+      configuration: {
+        baseURL: OPENROUTER_BASE_URL,
+        defaultHeaders: {
+          'HTTP-Referer': OPENROUTER_HTTP_REFERER,
+          'X-Title': OPENROUTER_APP_NAME,
+        },
+      },
     });
     
     const chain = extractionPrompt.pipe(model).pipe(new JsonOutputParser());

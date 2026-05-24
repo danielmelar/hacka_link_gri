@@ -1,7 +1,14 @@
 import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { Property } from '../../models/Property';
-import { OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL, ENABLE_VECTOR_SEARCH } from '../../config/env';
+import {
+  OPENROUTER_API_KEY,
+  OPENROUTER_BASE_URL,
+  OPENROUTER_HTTP_REFERER,
+  OPENROUTER_APP_NAME,
+  OPENROUTER_EMBEDDING_MODEL,
+  ENABLE_VECTOR_SEARCH,
+} from '../../config/env';
 import { logger } from '../../utils/logger';
 
 let vectorStore: MongoDBAtlasVectorSearch | null = null;
@@ -15,8 +22,15 @@ export function initializeVectorStore(): MongoDBAtlasVectorSearch | null {
   
   try {
     const embeddings = new OpenAIEmbeddings({
-      modelName: OPENAI_EMBEDDING_MODEL,
-      openAIApiKey: OPENAI_API_KEY,
+      modelName: OPENROUTER_EMBEDDING_MODEL,
+      apiKey: OPENROUTER_API_KEY,
+      configuration: {
+        baseURL: OPENROUTER_BASE_URL,
+        defaultHeaders: {
+          'HTTP-Referer': OPENROUTER_HTTP_REFERER,
+          'X-Title': OPENROUTER_APP_NAME,
+        },
+      },
     });
     
     // Note: This requires MongoDB Atlas with Vector Search index configured
@@ -71,8 +85,15 @@ export async function vectorSearch(
 export async function generatePropertyEmbedding(property: any): Promise<number[] | null> {
   try {
     const embeddings = new OpenAIEmbeddings({
-      modelName: OPENAI_EMBEDDING_MODEL,
-      openAIApiKey: OPENAI_API_KEY,
+      modelName: OPENROUTER_EMBEDDING_MODEL,
+      apiKey: OPENROUTER_API_KEY,
+      configuration: {
+        baseURL: OPENROUTER_BASE_URL,
+        defaultHeaders: {
+          'HTTP-Referer': OPENROUTER_HTTP_REFERER,
+          'X-Title': OPENROUTER_APP_NAME,
+        },
+      },
     });
     
     // Create rich text for embedding

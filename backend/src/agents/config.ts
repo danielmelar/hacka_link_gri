@@ -33,35 +33,35 @@ export const agents: Record<string, AgentConfig> = {
     systemPrompt: loadPrompt('sofia-sdr.md'),
     temperature: 0.7,
     maxTokens: 800,
-    model: 'gpt-4o-mini',
+    model: 'openai/gpt-4o-mini',
     triggers: [
       { condition: 'default', priority: 0 },
       { condition: 'etapa === "inicio"', priority: 10 },
       { condition: 'etapa === "qualificacao"', priority: 10 },
     ],
   },
-  
+
   especialista_familia: {
     name: 'Especialista em Famílias',
     type: 'Especialista_Familia',
     systemPrompt: loadPrompt('especialista-familia.md'),
     temperature: 0.75,
     maxTokens: 800,
-    model: 'gpt-4o-mini',
+    model: 'openai/gpt-4o-mini',
     triggers: [
       { condition: 'temFilhos === true', priority: 100 },
       { condition: 'quantosFilhos > 0', priority: 100 },
       { condition: 'targetProfile.includes("familia")', priority: 50 },
     ],
   },
-  
+
   especialista_alto_padrao: {
     name: 'Especialista em Alto Padrão',
     type: 'Especialista_Alto_Padrao',
     systemPrompt: loadPrompt('especialista-alto-padrao.md'),
     temperature: 0.6,
     maxTokens: 900,
-    model: 'gpt-4o', // Use stronger model for high-value clients
+    model: 'anthropic/claude-3.5-sonnet', // Stronger model for high-value clients
     triggers: [
       { condition: 'perfilEstimado === "AltoPadrao"', priority: 100 },
       { condition: 'orcamento > 1000000', priority: 90 },

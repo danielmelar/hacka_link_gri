@@ -162,7 +162,7 @@ Mensagem do Lead
 Cada corretor tem um link único:
 
 ```
-https://t.me/LinkGRIBot?start=<deep_link_token>
+https://t.me/clavisapp_bot?start=<deep_link_token>
 ```
 
 Quando o lead clica:
@@ -226,8 +226,8 @@ npm run typecheck         # Verifica tipos
 | `PORT` | Porta do servidor | `3000` |
 | `MONGODB_URI` | URI MongoDB | `mongodb://localhost:27017/linkgri` |
 | `REDIS_URL` | URL Redis | `redis://localhost:6379` |
-| `OPENAI_API_KEY` | Chave OpenAI | - |
-| `OPENAI_MODEL` | Modelo LLM | `gpt-4o-mini` |
+| `OPENROUTER_API_KEY` | Chave OpenRouter | - |
+| `OPENROUTER_MODEL` | Modelo LLM | `openai/gpt-4o-mini` |
 | `TELEGRAM_BOT_TOKEN` | Token BotFather | - |
 | `TELEGRAM_WEBHOOK_URL` | URL webhook | - |
 | `JWT_SECRET` | Segredo JWT | - |

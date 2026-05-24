@@ -62,13 +62,11 @@ const BrokerSchema = new Schema<IBroker>(
     deepLinkToken: {
       type: String,
       unique: true,
-      index: true,
       default: () => uuidv4().replace(/-/g, '').substring(0, 16),
     },
     apiToken: {
       type: String,
       unique: true,
-      index: true,
       default: () => uuidv4(),
     },
     telegramBotToken: {
@@ -103,15 +101,12 @@ const BrokerSchema = new Schema<IBroker>(
   }
 );
 
-// Indexes
-BrokerSchema.index({ email: 1 });
-BrokerSchema.index({ deepLinkToken: 1 });
-BrokerSchema.index({ apiToken: 1 });
+// Compound indexes only (unique fields already have indexes)
 BrokerSchema.index({ isActive: 1, plan: 1 });
 
 // Virtual for deep link URL
 BrokerSchema.virtual('deepLink').get(function(this: IBroker) {
-  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'LinkGRIBot';
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'clavisapp_bot';
   return `https://t.me/${botUsername}?start=${this.deepLinkToken}`;
 });
 

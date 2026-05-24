@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import dotenv from 'dotenv';
+
+// Load .env file before validation
+dotenv.config();
 
 const envSchema = z.object({
   // Application
@@ -12,10 +16,13 @@ const envSchema = z.object({
   // Cache
   REDIS_URL: z.string().default('redis://localhost:6379'),
   
-  // OpenAI
-  OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
-  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
-  OPENAI_EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
+  // OpenRouter (unified API for multiple AI providers)
+  OPENROUTER_API_KEY: z.string().min(1, 'OpenRouter API key is required'),
+  OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
+  OPENROUTER_HTTP_REFERER: z.string().default('https://linkgri.com'),
+  OPENROUTER_APP_NAME: z.string().default('LinkGRI'),
+  OPENROUTER_MODEL: z.string().default('openai/gpt-4o-mini'),
+  OPENROUTER_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
   
   // Telegram
   TELEGRAM_BOT_TOKEN: z.string().min(1, 'Telegram bot token is required'),
@@ -55,9 +62,12 @@ export const {
   API_URL,
   MONGODB_URI,
   REDIS_URL,
-  OPENAI_API_KEY,
-  OPENAI_MODEL,
-  OPENAI_EMBEDDING_MODEL,
+  OPENROUTER_API_KEY,
+  OPENROUTER_BASE_URL,
+  OPENROUTER_HTTP_REFERER,
+  OPENROUTER_APP_NAME,
+  OPENROUTER_MODEL,
+  OPENROUTER_EMBEDDING_MODEL,
   TELEGRAM_BOT_TOKEN,
   TELEGRAM_WEBHOOK_URL,
   JWT_SECRET,

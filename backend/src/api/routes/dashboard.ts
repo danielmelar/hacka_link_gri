@@ -349,7 +349,7 @@ export async function dashboardRoutes(fastify: any, options: any): Promise<void>
   // Get deep link
   fastify.get('/deep-link', async (request: any, reply: any) => {
     const broker = request.broker;
-    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'LinkGRIBot';
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'clavisapp_bot';
     const deepLink = `https://t.me/${botUsername}?start=${broker.deepLinkToken}`;
     
     reply.send({

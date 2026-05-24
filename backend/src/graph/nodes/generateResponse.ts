@@ -4,7 +4,12 @@ import { Lead } from '../../models/Lead';
 import { getAgentConfig } from '../../agents/config';
 import { searchRelevantProperties } from '../../services/rag/propertySearch';
 import type { AgentGraphState } from '../../types';
-import { OPENAI_API_KEY } from '../../config/env';
+import {
+  OPENROUTER_API_KEY,
+  OPENROUTER_BASE_URL,
+  OPENROUTER_HTTP_REFERER,
+  OPENROUTER_APP_NAME,
+} from '../../config/env';
 import { logger } from '../../utils/logger';
 
 export async function generateResponse(state: AgentGraphState): Promise<Partial<AgentGraphState>> {
@@ -80,12 +85,19 @@ Descrição: ${p.description.substring(0, 200)}...
       ...conversationHistory.map(m => [m.role, m.content] as [string, string]),
     ]);
     
-    // Generate response
+    // Generate response via OpenRouter
     const model = new ChatOpenAI({
       modelName: agentConfig.model,
       temperature: agentConfig.temperature,
       maxTokens: agentConfig.maxTokens,
-      openAIApiKey: OPENAI_API_KEY,
+      apiKey: OPENROUTER_API_KEY,
+      configuration: {
+        baseURL: OPENROUTER_BASE_URL,
+        defaultHeaders: {
+          'HTTP-Referer': OPENROUTER_HTTP_REFERER,
+          'X-Title': OPENROUTER_APP_NAME,
+        },
+      },
     });
     
     const chain = prompt.pipe(model);
