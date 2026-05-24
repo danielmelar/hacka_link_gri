@@ -11,8 +11,8 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("alexandre@clavis.com");
-  const [password, setPassword] = useState("clavis");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -136,12 +136,6 @@ function LoginPage() {
             Entrar
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </button>
-
-          <div className="rounded-md border border-dashed border-border bg-surface-container-low p-3 text-xs text-muted-foreground">
-            <p className="font-semibold text-foreground/80">Demo</p>
-            <p className="mt-1">Corretor: alexandre@clavis.com / clavis</p>
-            <p>Coordenador: rafaela@clavis.com / clavis</p>
-          </div>
 
           <p className="text-center text-[11px] text-muted-foreground">
             Em breve: 2FA, login Google e SSO corporativo.

@@ -4,14 +4,14 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_DELAY = 3000;
 
-const listeners = new Set<(data: any) => void>();
+const listeners = new Set<(data: unknown) => void>();
 
 function getApiBaseUrl(): string {
-  return import.meta.env.VITE_API_URL || '';
+  return (import.meta as any).env?.VITE_API_URL ?? "";
 }
 
 export function connectSSE(): void {
-  const token = localStorage.getItem('clavis_token');
+  const token = localStorage.getItem("clavis_token");
   if (!token) return;
 
   if (eventSource) {
@@ -19,7 +19,10 @@ export function connectSSE(): void {
   }
 
   const base = getApiBaseUrl();
-  const url = base ? `${base}/api/events?token=${encodeURIComponent(token)}` : `/api/events?token=${encodeURIComponent(token)}`;
+  const url = base
+    ? `${base}/api/events?token=${encodeURIComponent(token)}`
+    : `/api/events?token=${encodeURIComponent(token)}`;
+
   eventSource = new EventSource(url);
 
   eventSource.onopen = () => {
@@ -28,10 +31,10 @@ export function connectSSE(): void {
 
   eventSource.onmessage = (event) => {
     try {
-      const data = JSON.parse(event.data);
+      const data = JSON.parse(event.data as string);
       listeners.forEach((listener) => listener(data));
     } catch {
-      // Heartbeat or non-JSON message
+      // Heartbeat or non-JSON message — ignore
     }
   };
 
@@ -58,7 +61,7 @@ export function disconnectSSE(): void {
   reconnectAttempts = 0;
 }
 
-export function onSSEMessage(callback: (data: any) => void): () => void {
+export function onSSEMessage(callback: (data: unknown) => void): () => void {
   listeners.add(callback);
   return () => listeners.delete(callback);
 }

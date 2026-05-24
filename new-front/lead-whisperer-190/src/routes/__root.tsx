@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
+import { useLeadNotifications } from "@/hooks/use-lead-notifications";
 
 function NotFoundComponent() {
   return (
@@ -112,12 +113,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AppWithNotifications() {
+  useLeadNotifications();
+  return <Outlet />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <AppWithNotifications />
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,0 +1,28 @@
+# ── Dependências ──────────────────────────────
+node_modules/
+package-lock.json
+
+# ── Build / dist ──────────────────────────────
+dist/
+.wrangler/
+
+# ── Variáveis de ambiente ─────────────────────
+.env.local
+.env.*.local
+
+# ── Caches ────────────────────────────────────
+.cache/
+.vite/
+
+# ── Gerado automaticamente pelo TanStack Router
+src/routeTree.gen.ts
+
+# ── Lovable ───────────────────────────────────
+.lovable/
+
+# ── OS ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────
+*.log

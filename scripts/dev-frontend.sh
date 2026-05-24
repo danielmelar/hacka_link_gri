@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-FRONTEND_DIR="$PROJECT_ROOT/platform"
+FRONTEND_DIR="$PROJECT_ROOT/new-front/lead-whisperer-190"
 
 echo "🎨 Iniciando frontend CLAVIS..."
 echo "📁 Diretório: $FRONTEND_DIR"

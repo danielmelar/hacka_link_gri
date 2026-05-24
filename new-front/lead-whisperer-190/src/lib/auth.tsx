@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { authApi, type ApiBroker } from "@/lib/api";
+import { connectSSE, disconnectSSE } from "@/lib/sse";
 
 export type Role = "Corretor" | "Coordenador" | "Admin";
 
@@ -8,6 +10,7 @@ export interface AuthUser {
   firstName: string;
   email: string;
   role: Role;
+  plan: string;
   avatarColor: string;
 }
 
@@ -19,56 +22,67 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const STORAGE_KEY = "clavis.auth.user";
+const TOKEN_KEY = "clavis_token";
 
-const MOCK_USERS: Record<string, AuthUser & { password: string }> = {
-  "alexandre@clavis.com": {
-    id: "u-1",
-    name: "Alexandre Moraes",
-    firstName: "Alexandre",
-    email: "alexandre@clavis.com",
+function brokerToUser(broker: ApiBroker): AuthUser {
+  const firstName = broker.name.split(" ")[0];
+  // Simple deterministic color from email
+  const colors = [
+    "oklch(0.82 0.09 78)",
+    "oklch(0.72 0.14 155)",
+    "oklch(0.70 0.12 250)",
+    "oklch(0.75 0.11 30)",
+  ];
+  const idx = broker.email.charCodeAt(0) % colors.length;
+  return {
+    id: broker._id,
+    name: broker.name,
+    firstName,
+    email: broker.email,
     role: "Corretor",
-    avatarColor: "oklch(0.82 0.09 78)",
-    password: "clavis",
-  },
-  "rafaela@clavis.com": {
-    id: "u-2",
-    name: "Rafaela Lima",
-    firstName: "Rafaela",
-    email: "rafaela@clavis.com",
-    role: "Coordenador",
-    avatarColor: "oklch(0.72 0.14 155)",
-    password: "clavis",
-  },
-};
+    plan: broker.plan,
+    avatarColor: colors[idx],
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // On mount, restore session via /auth/me if token exists
   useEffect(() => {
-    try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-      if (raw) setUser(JSON.parse(raw));
-    } catch {}
-    setLoading(false);
+    const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    authApi
+      .me()
+      .then((res) => {
+        const u = brokerToUser(res.data.data);
+        setUser(u);
+        connectSSE();
+      })
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 400));
-    const record = MOCK_USERS[email.trim().toLowerCase()];
-    if (!record || record.password !== password) {
-      throw new Error("Credenciais inválidas. Tente alexandre@clavis.com / clavis");
-    }
-    const { password: _p, ...safe } = record;
-    setUser(safe);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
-    return safe;
+    const res = await authApi.login(email, password);
+    const { token, broker } = res.data.data;
+    localStorage.setItem(TOKEN_KEY, token);
+    const u = brokerToUser(broker);
+    setUser(u);
+    connectSSE();
+    return u;
   };
 
   const logout = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    disconnectSSE();
     setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (

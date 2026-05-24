@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────
+# CLAVIS — .gitignore raiz do monorepo
+# ─────────────────────────────────────────────
+
+# ── Dependências ──────────────────────────────
+node_modules/
+package-lock.json
+yarn.lock
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ── Build / dist ──────────────────────────────
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.vercel/
+.cloudflare/
+*.tsbuildinfo
+
+# ── Variáveis de ambiente ─────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ── Logs ──────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Caches ────────────────────────────────────
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+*.tsbuildinfo
+
+# ── IDEs / editores ───────────────────────────
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# ── OS ────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Testes / cobertura ────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ── Temporários / runtime ─────────────────────
+tmp/
+temp/
+*.tmp
+/tmp/clavis-*.pid
+/tmp/ngrok.log
+/tmp/clavis-*.log
+
+# ── Docker ────────────────────────────────────
+# (manter docker-compose.yml e Dockerfile sob versionamento)
+
+# ── Banco de dados local ──────────────────────
+*.sqlite
+*.sqlite3
+data/
+mongo-data/
+
+# ── Frontend — TanStack / Vite ────────────────
+new-front/lead-whisperer-190/.wrangler/
+new-front/lead-whisperer-190/dist/
+new-platform/.wrangler/
+new-platform/dist/
+
+# ── Frontend legado (deprecated) ─────────────
+platform-deprecated/
+
+# ── Lovable / gerado automaticamente ─────────
+new-front/lead-whisperer-190/.lovable/
+new-front/lead-whisperer-190/src/routeTree.gen.ts
+
+# ── Miscellaneous ─────────────────────────────
+.vercel
+*.pem
+.prettierignore_bak

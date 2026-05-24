@@ -57,8 +57,8 @@ start_backend() {
 }
 
 start_frontend() {
-    echo -e "${GREEN}🎨 Iniciando frontend...${NC}"
-    cd "$PROJECT_ROOT/platform"
+    echo -e "${GREEN}🎨 Iniciando frontend (new-front)...${NC}"
+    cd "$PROJECT_ROOT/new-front/lead-whisperer-190"
     
     if [ ! -d "node_modules" ]; then
         echo -e "${YELLOW}📦 Instalando dependências do frontend...${NC}"
