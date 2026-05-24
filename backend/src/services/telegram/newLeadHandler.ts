@@ -93,7 +93,6 @@ export async function handleNewLead(data: NewLeadData): Promise<{ success: boole
     // Notify broker via SSE
     await notifyBroker(broker._id.toString(), {
       type: 'new_lead',
-      timestamp: new Date().toISOString(),
       data: {
         leadId: lead._id,
         leadName: lead.name,

@@ -102,31 +102,34 @@ async function regularPropertySearch(
   limit: number
 ): Promise<any[]> {
   const query = Property.find({ brokerId, active: true });
-  
+
   // Apply type filter
   if (entities.tipoImovel || leadState.tipoImovel) {
     query.where('type').equals(entities.tipoImovel || leadState.tipoImovel);
   }
-  
-  // Apply budget filter
+
+  // Apply budget filter with 15% tolerance above max budget
   const budget = parseBudget(entities.orcamento || leadState.orcamentoEstimado);
   if (budget) {
     if (budget.min) query.where('price').gte(budget.min);
-    if (budget.max) query.where('price').lte(budget.max);
+    if (budget.max) {
+      // Add 15% tolerance so we don't miss properties just slightly above budget
+      const tolerantMax = Math.round(budget.max * 1.15);
+      query.where('price').lte(tolerantMax);
+    }
   }
-  
-  // Apply family filters
+
+  // Apply family filters (softer: suggest properties with at least 2 bedrooms)
   if (leadState.temFilhos) {
     query.where('bedrooms').gte(2);
-    query.where('features').in(['playground', 'area_lazer', 'seguranca_24h', 'piscina']);
   }
-  
+
   // Apply high-end filters
   if (leadState.perfilEstimado === 'AltoPadrao') {
     query.where('targetProfile').in(['alto_padrao']);
     query.where('price').gte(1000000);
   }
-  
+
   // Apply region filter
   if (entities.regiaoInteresse || leadState.regiaoInteresse) {
     const region = entities.regiaoInteresse || leadState.regiaoInteresse;
@@ -135,12 +138,69 @@ async function regularPropertySearch(
       { 'address.city': new RegExp(region!, 'i') },
     ]);
   }
-  
-  // Sort by relevance (featured first, then by price)
+
+  // Sort by relevance: featured first, then by profile match, then price
   query.sort({ featured: -1, price: 1 });
-  query.limit(limit);
-  
-  return query.lean();
+  query.limit(limit * 2); // Fetch more to allow post-filtering by relevance
+
+  const results = await query.lean();
+
+  // Post-process: score each property by relevance and return top N
+  return scoreAndRankProperties(results, leadState, entities).slice(0, limit);
+}
+
+/**
+ * Score and rank properties by relevance to the lead's profile and preferences.
+ */
+function scoreAndRankProperties(
+  properties: any[],
+  leadState: LeadState,
+  entities: ExtractedEntities
+): any[] {
+  const scored = properties.map(p => {
+    let score = 0;
+
+    // Profile match
+    if (leadState.perfilEstimado === 'AltoPadrao' && (p.targetProfile || []).includes('alto_padrao')) {
+      score += 30;
+    }
+    if (leadState.temFilhos && (p.targetProfile || []).includes('familia')) {
+      score += 25;
+    }
+
+    // Family features
+    if (leadState.temFilhos) {
+      const familyFeatures = ['playground', 'area_lazer', 'seguranca_24h', 'piscina'];
+      const matchedFeatures = (p.features || []).filter((f: string) => familyFeatures.includes(f));
+      score += matchedFeatures.length * 10;
+      if (p.bedrooms >= 3) score += 15;
+      else if (p.bedrooms >= 2) score += 10;
+    }
+
+    // Budget proximity (closer to budget = higher score)
+    const budget = parseBudget(entities.orcamento || leadState.orcamentoEstimado);
+    if (budget && budget.max && p.price <= budget.max) {
+      score += 20;
+    }
+
+    // Region match
+    const region = entities.regiaoInteresse || leadState.regiaoInteresse;
+    if (region && p.address) {
+      const regionLower = region.toLowerCase();
+      if (p.address.neighborhood?.toLowerCase().includes(regionLower)) score += 20;
+      if (p.address.city?.toLowerCase().includes(regionLower)) score += 15;
+    }
+
+    // Featured boost
+    if (p.featured) score += 10;
+
+    return { property: p, score };
+  });
+
+  // Sort by relevance score descending
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.map(s => s.property);
 }
 
 function parseBudget(budgetString?: string | null): { min?: number; max?: number } | null {

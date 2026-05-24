@@ -15,9 +15,15 @@ import {
   Clock,
   CheckCircle,
   Send,
+  TrendingUp,
+  Brain,
+  Building2,
+  Baby,
+  Zap,
+  Target,
 } from 'lucide-react';
-import { leadsApi, followUpsApi } from '../services/api';
-import type { Lead, Message, FollowUp } from '../types';
+import { leadsApi, followUpsApi, propertiesApi } from '../services/api';
+import type { Lead, Message, FollowUp, Property } from '../types';
 
 export default function LeadDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +31,7 @@ export default function LeadDetail() {
   const [lead, setLead] = useState<Lead | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
+  const [suggestedProperties, setSuggestedProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'chat' | 'info' | 'followups'>('chat');
   const [newNote, setNewNote] = useState('');
@@ -42,9 +49,18 @@ export default function LeadDetail() {
         leadsApi.getMessages(id, { limit: 50 }),
         followUpsApi.getByLead(id),
       ]);
-      setLead(leadRes.data.data);
+      const leadData = leadRes.data.data;
+      setLead(leadData);
       setMessages(msgRes.data.data || []);
       setFollowUps(fuRes.data.data || []);
+
+      // Load suggested properties if any
+      if (leadData.suggestedPropertyIds && leadData.suggestedPropertyIds.length > 0) {
+        const propsRes = await propertiesApi.getAll({
+          ids: leadData.suggestedPropertyIds.join(','),
+        });
+        setSuggestedProperties(propsRes.data.data || []);
+      }
     } catch (error) {
       console.error('Error loading lead:', error);
     } finally {
@@ -280,26 +296,218 @@ export default function LeadDetail() {
           )}
 
           {activeTab === 'info' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-800 mb-3">Qualificação</h3>
-                <dl className="space-y-3">
-                  {[
-                    { label: 'Tem filhos', value: lead.state.temFilhos === null ? '—' : lead.state.temFilhos ? 'Sim' : 'Não' },
-                    { label: 'Quantos filhos', value: lead.state.quantosFilhos || '—' },
-                    { label: 'Dor principal', value: lead.state.dorPrincipal || '—' },
-                    { label: 'Urgência', value: lead.state.urgencia || '—' },
-                    { label: 'Agente atual', value: lead.state.agenteAtual },
-                  ].map((item) => (
-                    <div key={item.label} className="flex justify-between">
-                      <dt className="text-sm text-slate-500">{item.label}</dt>
-                      <dd className="text-sm font-medium text-slate-800">{item.value}</dd>
+            <div className="space-y-6">
+              {/* Score Evolution */}
+              {lead.scoreHistory && lead.scoreHistory.length > 1 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary-600" />
+                    Evolução do Score
+                  </h3>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex items-end gap-1 h-16">
+                      {lead.scoreHistory.map((item, idx) => {
+                        const height = Math.max(8, (item.score / 100) * 64);
+                        return (
+                          <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                            <div
+                              className={`w-full rounded-t ${
+                                item.score >= 70
+                                  ? 'bg-success-400'
+                                  : item.score >= 40
+                                  ? 'bg-warning-400'
+                                  : 'bg-primary-300'
+                              }`}
+                              style={{ height: `${height}px` }}
+                              title={`${item.score} - ${item.reason}`}
+                            />
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(item.timestamp).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </dl>
-              </div>
+                    <div className="flex justify-between mt-2 text-xs text-slate-500">
+                      <span>Primeiro contato: {lead.scoreHistory[0]?.score} pts</span>
+                      <span className="font-medium text-primary-600">
+                        Atual: {lead.score} pts
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Intelligence Profile */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-800 mb-3">Anotações</h3>
+                <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-primary-600" />
+                  Perfil Inteligente
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    {
+                      label: 'Nome',
+                      value: lead.name,
+                      icon: User,
+                      known: !!lead.name,
+                    },
+                    {
+                      label: 'Telefone',
+                      value: lead.phone,
+                      icon: Phone,
+                      known: !!lead.phone,
+                    },
+                    {
+                      label: 'Email',
+                      value: lead.email,
+                      icon: Mail,
+                      known: !!lead.email,
+                    },
+                    {
+                      label: 'Tipo de Imóvel',
+                      value: lead.state.tipoImovel,
+                      icon: Home,
+                      known: !!lead.state.tipoImovel,
+                    },
+                    {
+                      label: 'Orçamento',
+                      value: lead.state.orcamentoEstimado,
+                      icon: DollarSign,
+                      known: !!lead.state.orcamentoEstimado,
+                    },
+                    {
+                      label: 'Região',
+                      value: lead.state.regiaoInteresse,
+                      icon: MapPin,
+                      known: !!lead.state.regiaoInteresse,
+                    },
+                    {
+                      label: 'Tem Filhos',
+                      value: lead.state.temFilhos === null ? null : lead.state.temFilhos ? 'Sim' : 'Não',
+                      icon: Baby,
+                      known: lead.state.temFilhos !== null,
+                    },
+                    {
+                      label: 'Quantos Filhos',
+                      value: lead.state.quantosFilhos ? String(lead.state.quantosFilhos) : null,
+                      icon: Users,
+                      known: lead.state.quantosFilhos !== null && lead.state.quantosFilhos > 0,
+                    },
+                    {
+                      label: 'Urgência',
+                      value: lead.state.urgencia,
+                      icon: Zap,
+                      known: !!lead.state.urgencia,
+                    },
+                    {
+                      label: 'Perfil Estimado',
+                      value: lead.state.perfilEstimado === 'Indefinido' ? null : lead.state.perfilEstimado,
+                      icon: Target,
+                      known: lead.state.perfilEstimado !== 'Indefinido',
+                    },
+                    {
+                      label: 'Etapa',
+                      value: lead.state.etapa,
+                      icon: TrendingUp,
+                      known: lead.state.etapa !== 'inicio',
+                    },
+                    {
+                      label: 'Agente Atual',
+                      value: lead.state.agenteAtual,
+                      icon: Brain,
+                      known: true,
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.label}
+                        className={`p-3 rounded-lg border ${
+                          item.known
+                            ? 'bg-success-50 border-success-200'
+                            : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon
+                            className={`w-3.5 h-3.5 ${
+                              item.known ? 'text-success-600' : 'text-slate-400'
+                            }`}
+                          />
+                          <span
+                            className={`text-xs ${
+                              item.known ? 'text-success-700' : 'text-slate-400'
+                            }`}
+                          >
+                            {item.label}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-sm font-medium ${
+                            item.known ? 'text-slate-800' : 'text-slate-400 italic'
+                          }`}
+                        >
+                          {item.value || 'Não identificado'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Suggested Properties */}
+              {suggestedProperties.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary-600" />
+                    Imóveis Apresentados ao Lead
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {suggestedProperties.map((prop) => (
+                      <div
+                        key={prop._id}
+                        className="p-3 bg-white border border-slate-200 rounded-lg hover:border-primary-300 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/properties`)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-sm font-medium text-slate-800 line-clamp-1">
+                            {prop.title}
+                          </h4>
+                          <span className="text-xs font-semibold text-primary-600">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                              maximumFractionDigits: 0,
+                            }).format(prop.price)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {prop.type} • {prop.bedrooms} quartos • {prop.area}m² •{' '}
+                          {prop.address.neighborhood}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {(prop.features || []).slice(0, 3).map((f) => (
+                            <span
+                              key={f}
+                              className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded"
+                            >
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-800 mb-3">Anotações do Corretor</h3>
                 <div className="space-y-3">
                   {lead.notes ? (
                     <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">{lead.notes}</p>

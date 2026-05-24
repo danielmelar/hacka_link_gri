@@ -40,7 +40,18 @@ export const agentStateChannels = {
     default: () => [],
   },
   extractedEntities: {
-    value: (x: ExtractedEntities, y?: ExtractedEntities) => ({ ...x, ...y }),
+    value: (x: ExtractedEntities, y?: ExtractedEntities) => {
+      if (!y) return x;
+      // Deep merge: only overwrite with explicitly defined values (not null/undefined)
+      // This preserves accumulated entities across messages
+      const merged: ExtractedEntities = { ...x };
+      for (const [key, val] of Object.entries(y)) {
+        if (val !== undefined && val !== null) {
+          (merged as any)[key] = val;
+        }
+      }
+      return merged;
+    },
     default: () => ({}),
   },
   currentAgent: {

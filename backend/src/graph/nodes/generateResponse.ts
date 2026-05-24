@@ -41,15 +41,23 @@ export async function generateResponse(state: AgentGraphState): Promise<Partial<
     }));
     
     // Build properties context
+    const formatPrice = (price: number): string => {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        maximumFractionDigits: 0,
+      }).format(price);
+    };
+
     const propertiesContext = properties.length > 0
       ? properties.map(p => `
 Imóvel: ${p.title}
-Preço: ${p.priceFormatted}
+Preço: ${formatPrice(p.price)}
 Tipo: ${p.type}
 Quartos: ${p.bedrooms} | Banheiros: ${p.bathrooms} | Área: ${p.area}m²
-Bairro: ${p.address.neighborhood}, ${p.address.city}
-Características: ${p.features.join(', ')}
-Descrição: ${p.description.substring(0, 200)}...
+Bairro: ${p.address?.neighborhood || 'N/A'}, ${p.address?.city || 'N/A'}
+Características: ${(p.features || []).join(', ')}
+Descrição: ${(p.description || '').substring(0, 200)}...
 `).join('\n---\n')
       : 'Nenhum imóvel específico disponível no momento. Foque em entender melhor as necessidades do lead.';
     

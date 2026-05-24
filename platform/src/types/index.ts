@@ -17,6 +17,7 @@ export interface Lead {
   tags: string[];
   notes?: string;
   scheduledAppointment?: ScheduledAppointment;
+  suggestedPropertyIds?: string[];
   createdAt: string;
   updatedAt: string;
 }
