@@ -29,7 +29,7 @@ services:
       backend:
         condition: service_healthy
       frontend:
-        condition: service_healthy
+        condition: service_started
     networks:
       - clavis-net
 
@@ -39,18 +39,20 @@ services:
       context: ./new-front/lead-whisperer-190
       dockerfile: Dockerfile
       args:
-        # A URL da API deve ser a URL pública raiz (nginx faz o proxy /api → backend)
-        VITE_API_URL: ${PUBLIC_URL:-http://localhost}
+        # Deixar VITE_API_URL vazio para que o axios use caminhos relativos (/api)
+        # Assim o browser usa automaticamente a mesma origem (ngrok, domínio, localhost)
+        # O nginx roteia /api → backend internamente
+        VITE_API_URL: ""
     container_name: clavis-frontend
     restart: unless-stopped
     expose:
       - "4173"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:4173/"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4173/',r=>process.exit(r.statusCode<400?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
-      retries: 3
-      start_period: 15s
+      retries: 5
+      start_period: 20s
     networks:
       - clavis-net
 
@@ -63,25 +65,15 @@ services:
     restart: unless-stopped
     expose:
       - "3000"
+    env_file:
+      - ./backend/.env          # usa o .env já existente do backend
     environment:
+      # Sobrescreve apenas o que muda dentro do Docker
       NODE_ENV: production
       PORT: "3000"
-      API_URL: ${PUBLIC_URL:-http://localhost}
       MONGODB_URI: mongodb://mongo:27017/linkgri
       REDIS_URL: redis://redis:6379
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
-      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
-      OPENROUTER_HTTP_REFERER: ${OPENROUTER_HTTP_REFERER:-https://clavis.immo}
-      OPENROUTER_APP_NAME: ${OPENROUTER_APP_NAME:-CLAVIS}
-      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-4o-mini}
-      OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-openai/text-embedding-3-small}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-clavisapp_bot}
-      TELEGRAM_WEBHOOK_URL: ${PUBLIC_URL:-http://localhost}/webhook/telegram
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      ENABLE_SSE: "true"
+      # TELEGRAM_WEBHOOK_URL é lido do .env do backend (já tem a URL do ngrok)
       ENABLE_VECTOR_SEARCH: "false"
     depends_on:
       mongo:

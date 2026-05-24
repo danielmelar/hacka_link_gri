@@ -170,7 +170,7 @@ async function processExistingLeadMessage(lead: any, text: string): Promise<void
   const { Message } = await import('../../models/Message');
   const recentMessages = await Message.getRecentForContext(lead._id.toString(), 10);
   
-  const conversationHistory = recentMessages.reverse().map(m => ({
+  const conversationHistory = recentMessages.reverse().map((m: any) => ({
     role: m.direction === 'inbound' ? 'user' : 'assistant',
     content: m.content,
   }));

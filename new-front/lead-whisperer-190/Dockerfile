@@ -23,12 +23,28 @@ COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.lovable ./.lovable 2>/dev/null || true
+
+# Gera o index.html da SPA a partir dos assets do build
+# TanStack Start com Cloudflare target não emite index.html — criamos via shell
+RUN ASSETS="dist/client/assets" && \
+    CSS=$(ls "$ASSETS"/styles-*.css 2>/dev/null | head -1 | xargs -I{} basename {} 2>/dev/null) && \
+    JS=$(ls "$ASSETS"/index-*.js "$ASSETS"/start-*.js 2>/dev/null | head -1 | xargs -I{} basename {} 2>/dev/null) && \
+    echo "JS=$JS CSS=$CSS" && \
+    { printf '<!DOCTYPE html>\n<html lang="pt-BR" class="dark">\n<head>\n'; \
+      printf '  <meta charset="utf-8">\n'; \
+      printf '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'; \
+      printf '  <title>CLAVIS — Inteligência comercial imobiliária</title>\n'; \
+      [ -n "$CSS" ] && printf '  <link rel="stylesheet" crossorigin href="/assets/%s">\n' "$CSS"; \
+      printf '</head>\n<body>\n  <div id="root"></div>\n'; \
+      [ -n "$JS" ]  && printf '  <script type="module" crossorigin src="/assets/%s"></script>\n' "$JS"; \
+      printf '</body>\n</html>\n'; \
+    } > dist/client/index.html && \
+    echo "✅ index.html gerado" && cat dist/client/index.html
 
 EXPOSE 4173
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:4173/ || exit 1
+  CMD node -e "require('http').get('http://localhost:4173/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
 
-# vite preview serves dist/client as a static SPA
-CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
+# Serve dist/client como SPA — redireciona todas as rotas para index.html
+CMD ["npx", "--yes", "serve", "dist/client", "--listen", "4173", "--single"]

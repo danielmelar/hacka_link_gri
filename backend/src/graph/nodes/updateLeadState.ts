@@ -166,7 +166,7 @@ export async function updateLeadState(state: AgentGraphState): Promise<Partial<A
       const existing = new Set(lead.suggestedPropertyIds?.map(String) || []);
       const newIds = state.suggestedProperties.filter(id => !existing.has(id));
       if (newIds.length > 0) {
-        lead.suggestedPropertyIds = [...existing, ...newIds];
+        lead.suggestedPropertyIds = [...existing, ...newIds] as any;
         changesLog.push(`suggestedProperties: +${newIds.length}`);
       }
     }

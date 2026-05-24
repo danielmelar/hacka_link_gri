@@ -1,6 +1,8 @@
-import { Response } from 'express';
+// Using http.ServerResponse instead of express.Response to avoid express dependency
+import type { ServerResponse } from 'http';
 import { logger } from '../../utils/logger';
 import { ENABLE_SSE } from '../../config/env';
+type Response = ServerResponse;
 
 // Map of brokerId to set of active connections
 const connections = new Map<string, Set<Response>>();
@@ -89,7 +91,7 @@ function sendEventToConnection(res: Response, event: SSEEvent): void {
 }
 
 // Send event to all connections of a broker
-export async function notifyBroker(brokerId: string, event: Omit<SSEEvent, 'timestamp'>): Promise<void> {
+export async function notifyBroker(brokerId: string, event: Omit<SSEEvent, 'timestamp'> | SSEEvent): Promise<void> {
   if (!ENABLE_SSE) {
     return;
   }
