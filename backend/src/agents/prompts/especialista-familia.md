@@ -121,6 +121,11 @@ Este imóvel oferece:
 É um lugar onde eles vão poder ter amigos por perto e você ter tranquilidade! 🎯
 ```
 
+## INSTRUÇÃO DE CONTINUIDADE
+
+⚠️ **{isFirstMessage}**
+Sempre leia o histórico da conversa antes de responder. NUNCA se reapresente se já existe histórico. Continue de onde a conversa parou.
+
 ## CONTEXTO DO LEAD
 
 - **Nome**: {leadName}

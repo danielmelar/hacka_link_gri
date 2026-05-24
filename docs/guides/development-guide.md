@@ -1,6 +1,40 @@
 # Guia de Desenvolvimento - CLAVIS
 
-## Setup do Ambiente
+---
+
+## 🚀 Deploy Rápido (Docker — recomendado)
+
+### Pré-requisitos
+- Docker e Docker Compose instalados
+- Bot no Telegram criado via @BotFather
+- Chave de API do OpenRouter (https://openrouter.ai)
+
+### 1. Configurar variáveis
+```bash
+cp .env.example .env
+# Edite .env e preencha: TELEGRAM_BOT_TOKEN, OPENROUTER_API_KEY, JWT_SECRET, PUBLIC_URL
+```
+
+### 2. Subir tudo com um comando
+```bash
+./scripts/deploy.sh
+```
+
+Ou com seed inicial do banco:
+```bash
+./scripts/deploy.sh --seed
+```
+
+### 3. Acessar
+- **Dashboard:** `http://seu-servidor` (ou `http://localhost`)
+- **API Health:** `http://seu-servidor/health`
+- **Bot Telegram:** `https://t.me/clavisapp_bot?start=TOKEN_DO_CORRETOR`
+
+> Para hospedar em produção, aponte seu domínio para o servidor e defina `PUBLIC_URL=https://seudominio.com` no `.env`. Para Telegram funcionar, a URL deve ser HTTPS — use Nginx + Certbot ou um proxy como Cloudflare.
+
+---
+
+## 🛠️ Desenvolvimento Local
 
 ### Pré-requisitos
 

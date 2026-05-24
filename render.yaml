@@ -1,0 +1,128 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CLAVIS — Render Blueprint
+#
+# Deploy completo no Render.com com um clique:
+#   1. Faça push deste repositório no GitHub
+#   2. No Render: New → Blueprint → selecione o repositório
+#   3. Preencha as variáveis marcadas como "sync: false" (segredos)
+#
+# Serviços criados:
+#   clavis-backend   → Web Service (Node.js/Docker) — porta 3000
+#   clavis-frontend  → Web Service (Node.js/Docker) — porta 4173
+#   clavis-redis     → Redis gerenciado pelo Render
+#
+# Banco de dados:
+#   Use MongoDB Atlas (gratuito M0) e defina MONGODB_URI nas env vars.
+#   https://www.mongodb.com/cloud/atlas/register
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Backend — API Node.js / Fastify ────────────────────────────────────────
+  - type: web
+    name: clavis-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter          # starter (US$ 7/mês) — troque por "free" para testes
+    region: oregon         # oregon | frankfurt | singapore | ohio
+    branch: main
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: "3000"
+
+      # URL pública do próprio backend (Render injeta automaticamente)
+      - key: API_URL
+        fromService:
+          type: web
+          name: clavis-backend
+          property: host
+
+      # ── MongoDB Atlas (externo) ─────────────────────────────────────────────
+      # Crie um cluster gratuito em https://cloud.mongodb.com
+      # e cole a connection string aqui
+      - key: MONGODB_URI
+        sync: false   # ← preencher no painel do Render
+
+      # ── Redis (serviço gerenciado Render) ───────────────────────────────────
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: clavis-redis
+          property: connectionString
+
+      # ── IA — OpenRouter ─────────────────────────────────────────────────────
+      - key: OPENROUTER_API_KEY
+        sync: false   # ← preencher no painel do Render
+
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+
+      - key: OPENROUTER_HTTP_REFERER
+        value: https://clavis.immo
+
+      - key: OPENROUTER_APP_NAME
+        value: CLAVIS
+
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4o-mini
+
+      - key: OPENROUTER_EMBEDDING_MODEL
+        value: openai/text-embedding-3-small
+
+      # ── Telegram ─────────────────────────────────────────────────────────────
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false   # ← preencher no painel do Render
+
+      - key: TELEGRAM_BOT_USERNAME
+        value: clavisapp_bot
+
+      # TELEGRAM_WEBHOOK_URL não precisa ser definida manualmente.
+      # O backend detecta automaticamente via RENDER_EXTERNAL_URL (injetada pelo Render).
+      # Resultado: https://<nome-do-serviço>.onrender.com/webhook/telegram
+
+      # ── JWT ──────────────────────────────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true   # ← Render gera automaticamente (seguro)
+
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+      # ── Features ─────────────────────────────────────────────────────────────
+      - key: ENABLE_SSE
+        value: "true"
+
+      - key: ENABLE_VECTOR_SEARCH
+        value: "false"
+
+      - key: LOG_LEVEL
+        value: info
+
+  # ── Frontend — SPA React (TanStack / Vite) ─────────────────────────────────
+  - type: web
+    name: clavis-frontend
+    runtime: docker
+    dockerfilePath: ./new-front/lead-whisperer-190/Dockerfile
+    dockerContext: ./new-front/lead-whisperer-190
+    plan: starter
+    region: oregon
+    branch: main
+    healthCheckPath: /
+
+    envVars:
+      # URL pública do backend — o frontend chama a API aqui
+      # Após o deploy, copie a URL do clavis-backend e cole aqui
+      - key: VITE_API_URL
+        sync: false   # ← Ex: https://clavis-backend.onrender.com
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  - type: redis
+    name: clavis-redis
+    plan: starter       # starter = 25MB — suficiente para cache/sessões
+    region: oregon
+    ipAllowList: []     # apenas serviços internos do Render acessam

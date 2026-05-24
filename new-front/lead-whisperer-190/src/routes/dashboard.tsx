@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   TrendingUp,
@@ -10,6 +11,9 @@ import {
   ArrowUpRight,
   Loader2,
   Flame,
+  Copy,
+  Check,
+  MessageCircle,
 } from "lucide-react";
 import { AppTopbar } from "@/components/app-topbar";
 import { useAuth } from "@/lib/auth";
@@ -42,6 +46,22 @@ function DashboardPage() {
     queryKey: ["properties", { limit: 3 }],
     queryFn: () => propertiesApi.getAll({ limit: 3, active: true }).then((r) => r.data.data),
   });
+
+  const { data: profileData } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => dashboardApi.getProfile().then((r) => r.data.data),
+  });
+
+  const [copied, setCopied] = useState(false);
+  const deepLink = profileData?.deepLinkToken
+    ? `https://t.me/clavisapp_bot?start=${profileData.deepLinkToken}`
+    : null;
+  const copyLink = async () => {
+    if (!deepLink) return;
+    await navigator.clipboard.writeText(deepLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const isLoading = statsLoading || overviewLoading;
 
@@ -214,6 +234,40 @@ function DashboardPage() {
                   )}
                 </ul>
               )}
+            </div>
+          </section>
+
+          {/* Deep link banner */}
+          <section className="animate-fade-in stagger-3">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/40 bg-primary/5 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Seu link exclusivo do Telegram (Sofia)</p>
+                  <p className="text-xs text-muted-foreground">
+                    {deepLink ? (
+                      <code className="text-primary">{deepLink}</code>
+                    ) : (
+                      "Carregando..."
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={copyLink}
+                  disabled={!deepLink}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {copied ? <><Check className="h-3.5 w-3.5" /> Copiado!</> : <><Copy className="h-3.5 w-3.5" /> Copiar link</>}
+                </button>
+                <Link
+                  to="/profile"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary"
+                >
+                  Ver detalhes
+                </Link>
+              </div>
             </div>
           </section>
 

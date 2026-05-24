@@ -1,0 +1,153 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CLAVIS — Docker Compose completo
+#
+# Uso:
+#   1. cp .env.example .env  →  preencha os valores
+#   2. docker compose up -d --build
+#   3. Acesse http://localhost (ou PUBLIC_URL)
+#
+# Serviços:
+#   nginx     → porta 80 (proxy reverso para frontend e backend)
+#   frontend  → porta 4173 interna (SPA React / TanStack)
+#   backend   → porta 3000 interna (API Node / Fastify)
+#   mongo     → porta 27017 interna
+#   redis     → porta 6379 interna
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Nginx — proxy reverso e ponto de entrada único ─────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: clavis-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - clavis-net
+
+  # ── Frontend — SPA React (TanStack Start) ──────────────────────────────────
+  frontend:
+    build:
+      context: ./new-front/lead-whisperer-190
+      dockerfile: Dockerfile
+      args:
+        # A URL da API deve ser a URL pública raiz (nginx faz o proxy /api → backend)
+        VITE_API_URL: ${PUBLIC_URL:-http://localhost}
+    container_name: clavis-frontend
+    restart: unless-stopped
+    expose:
+      - "4173"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4173/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - clavis-net
+
+  # ── Backend — API Node.js / Fastify ────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clavis-backend
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      API_URL: ${PUBLIC_URL:-http://localhost}
+      MONGODB_URI: mongodb://mongo:27017/linkgri
+      REDIS_URL: redis://redis:6379
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_HTTP_REFERER: ${OPENROUTER_HTTP_REFERER:-https://clavis.immo}
+      OPENROUTER_APP_NAME: ${OPENROUTER_APP_NAME:-CLAVIS}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-4o-mini}
+      OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-openai/text-embedding-3-small}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-clavisapp_bot}
+      TELEGRAM_WEBHOOK_URL: ${PUBLIC_URL:-http://localhost}/webhook/telegram
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ENABLE_SSE: "true"
+      ENABLE_VECTOR_SEARCH: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - backend-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', r => r.statusCode===200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - clavis-net
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7-jammy
+    container_name: clavis-mongo
+    restart: unless-stopped
+    expose:
+      - "27017"
+    environment:
+      MONGO_INITDB_DATABASE: linkgri
+    volumes:
+      - mongo-data:/data/db
+      - ./backend/scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - clavis-net
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: clavis-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - clavis-net
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  mongo-data:
+    name: clavis-mongo-data
+  redis-data:
+    name: clavis-redis-data
+  backend-logs:
+    name: clavis-backend-logs
+
+# ─── Rede interna ─────────────────────────────────────────────────────────────
+networks:
+  clavis-net:
+    name: clavis-network
+    driver: bridge

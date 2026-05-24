@@ -34,8 +34,14 @@ export async function generateResponse(state: AgentGraphState): Promise<Partial<
       lead.state
     );
     
-    // Build conversation history
-    const conversationHistory = state.messages.slice(-6).map(m => ({
+    // Build conversation history — last 20 messages for context
+    // The first message in state.messages is always the current inbound message;
+    // everything before it is the loaded history from DB.
+    const allMessages = state.messages;
+    const isFirstMessage = allMessages.filter(m => m.role === 'user').length <= 1
+      && allMessages.filter(m => m.role === 'assistant').length === 0;
+
+    const conversationHistory = allMessages.slice(-20).map(m => ({
       role: m.role,
       content: m.content,
     }));
@@ -85,14 +91,24 @@ Descrição: ${(p.description || '').substring(0, 200)}...
       .replace('{tipoImovel}', stateContext.tipoImovel)
       .replace('{etapa}', stateContext.etapa)
       .replace('{agenteAtual}', stateContext.agenteAtual)
-      .replace('{propertiesContext}', propertiesContext);
+      .replace('{propertiesContext}', propertiesContext)
+      .replace('{isFirstMessage}', isFirstMessage ? 'SIM — esta é a PRIMEIRA mensagem do lead. Apresente-se.' : 'NÃO — já existe histórico de conversa. NÃO se apresente novamente. Continue a conversa de onde parou, com base no histórico acima.')
+      .replace('{idadeFilhos}', lead.state.quantosFilhos ? 'informado anteriormente' : 'não informado')
+      .replace('{urgencia}', lead.state.urgencia ?? 'não informada')
+      // Remove any remaining unreplaced placeholders to avoid LangChain template errors
+      .replace(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g, '—');
     
-    // Create prompt
-    const prompt = ChatPromptTemplate.fromMessages([
-      ['system', systemPrompt],
-      ...conversationHistory.map(m => [m.role, m.content] as [string, string]),
-    ]);
-    
+    // Build messages directly — avoids LangChain template variable parsing
+    // since systemPrompt is already fully resolved (no {placeholders} left)
+    const { SystemMessage, HumanMessage, AIMessage } = await import('@langchain/core/messages');
+
+    const messages = [
+      new SystemMessage(systemPrompt),
+      ...conversationHistory.map(m =>
+        m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
+      ),
+    ];
+
     // Generate response via OpenRouter
     const model = new ChatOpenAI({
       modelName: agentConfig.model,
@@ -107,9 +123,8 @@ Descrição: ${(p.description || '').substring(0, 200)}...
         },
       },
     });
-    
-    const chain = prompt.pipe(model);
-    const response = await chain.invoke({});
+
+    const response = await model.invoke(messages);
     
     const processingTime = Date.now() - startTime;
     

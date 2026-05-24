@@ -56,7 +56,7 @@ async function registerRoutes(): Promise<void> {
   await app.register(authRoutes, { prefix: '/api' });
 
   // SSE events (authenticated)
-  await app.register(sseRoutes, { prefix: '/api/events' });
+  await app.register(sseRoutes, { prefix: '/api' });
   
   // Dashboard API (authenticated)
   await app.register(dashboardRoutes, { prefix: '/api' });
@@ -108,9 +108,18 @@ async function initializeServices(): Promise<void> {
   // Initialize Telegram bot
   await initializeBot();
   
-  // Set webhook if URL is provided
-  if (TELEGRAM_WEBHOOK_URL) {
-    await setWebhook(TELEGRAM_WEBHOOK_URL);
+  // Set webhook — usa TELEGRAM_WEBHOOK_URL ou auto-detecta via RENDER_EXTERNAL_URL
+  const webhookUrl =
+    TELEGRAM_WEBHOOK_URL ||
+    (process.env.RENDER_EXTERNAL_URL
+      ? `${process.env.RENDER_EXTERNAL_URL}/webhook/telegram`
+      : null);
+
+  if (webhookUrl) {
+    await setWebhook(webhookUrl);
+  } else {
+    logger.warn('⚠️  TELEGRAM_WEBHOOK_URL não definida — webhook não configurado');
+    logger.warn('   Em produção, defina TELEGRAM_WEBHOOK_URL ou use o Render (auto-detecta).');
   }
   
   // Initialize vector store (optional)
