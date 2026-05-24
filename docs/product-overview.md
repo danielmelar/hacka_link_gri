@@ -1,8 +1,8 @@
-# LinkGRI - Visão Geral do Produto
+# CLAVIS - Visão Geral do Produto
 
-## O Que é a LinkGRI?
+## O Que é a CLAVIS?
 
-A **LinkGRI** é uma plataforma de CRM inteligente e multi-tenant para **corretores de imóveis experientes** que já investem em tráfego pago e geram seus próprios leads.
+A **CLAVIS** é uma plataforma de CRM inteligente e multi-tenant para **corretores de imóveis experientes** que já investem em tráfego pago e geram seus próprios leads.
 
 ### O Problema que Resolvemos
 
@@ -22,7 +22,7 @@ Uma inteligência artificial (multi-agente) que:
 
 ### Diferencial Competitivo
 
-| Aspecto | CRMs Tradicionais | LinkGRI |
+| Aspecto | CRMs Tradicionais | CLAVIS |
 |---------|-------------------|---------|
 | Atendimento inicial | Manual, depende do corretor | **Automático, instantâneo** |
 | Qualificação | Formulários rígidos | **Conversa natural com IA** |

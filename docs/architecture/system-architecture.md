@@ -1,8 +1,8 @@
-# Arquitetura do Sistema - LinkGRI v1.0
+# Arquitetura do Sistema - CLAVIS v1.0
 
 ## Visão Geral da Arquitetura
 
-A LinkGRI segue uma arquitetura **modular, escalável e orientada a serviços**, projetada para suportar multi-tenancy desde o início.
+A CLAVIS segue uma arquitetura **modular, escalável e orientada a serviços**, projetada para suportar multi-tenancy desde o início.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐

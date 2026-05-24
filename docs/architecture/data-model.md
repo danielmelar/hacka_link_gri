@@ -1,4 +1,4 @@
-# Modelo de Dados - LinkGRI v1.0
+# Modelo de Dados - CLAVIS v1.0
 
 ## Visão Geral
 

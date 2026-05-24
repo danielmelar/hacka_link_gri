@@ -1,4 +1,4 @@
-# Guia de Desenvolvimento - LinkGRI
+# Guia de Desenvolvimento - CLAVIS
 
 ## Setup do Ambiente
 

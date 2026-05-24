@@ -1,8 +1,8 @@
-# Contexto do Projeto - LinkGRI
+# Contexto do Projeto - CLAVIS
 
 ## Origem
 
-A LinkGRI nasceu da observação de um problema recorrente no mercado imobiliário brasileiro: **corretores experientes perdem horas qualificando leads que muitas vezes não têm intenção real de compra**.
+A CLAVIS nasceu da observação de um problema recorrente no mercado imobiliário brasileiro: **corretores experientes perdem horas qualificando leads que muitas vezes não têm intenção real de compra**.
 
 ### O Cenário
 
@@ -22,10 +22,9 @@ Com a democratização dos LLMs (Large Language Models) em 2023-2024, tornou-se 
 
 ---
 
-## Por Que "LinkGRI"?
+## Por Que "CLAVIS"?
 
-**Link** = Conexão entre corretor e lead
-**GRI** = Global Real Estate (referência ao mercado imobiliário global)
+**CLAVIS** = Chave (em latim). A chave que conecta corretores aos leads certos.
 
 A missão é **conectar corretores aos leads certos, no momento certo, com o contexto certo**.
 
@@ -33,7 +32,7 @@ A missão é **conectar corretores aos leads certos, no momento certo, com o con
 
 ## O Que é a API
 
-A API LinkGRI é o **cérebro da plataforma**. Ela:
+A API CLAVIS é o **cérebro da plataforma**. Ela:
 
 1. **Recebe mensagens** do Telegram via webhook
 2. **Processa conversas** através de agentes de IA

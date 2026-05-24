@@ -1,10 +1,10 @@
-# API Reference - LinkGRI v1.0
+# API Reference - CLAVIS v1.0
 
 ## Base URL
 
 ```
 Desenvolvimento: http://localhost:3000
-Produção: https://api.linkgri.com
+Produção: https://api.clavis.immo
 ```
 
 ## Autenticação
